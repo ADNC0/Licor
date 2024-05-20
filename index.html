@@ -1,45 +1,84 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en" dir="ltr">
+
 <head>
     <meta charset="UTF-8">
+    <title>Registro y Visualización de Productos</title>
+    <link rel="stylesheet" href="index2.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Licoreria</title>
-    <hr>
-    <form id="crud-form">
-        <label for="nombre">Nombre:</label>
-        <input type="text" id = "nombre">
-        <label for="descripcion">descripcion:</label>
-        <input type="text" id = "descripcion">
-        <label for="marca">marca:</label>
-        <input type="text" id = "marca">
-        <label for="tipo">descripcion:</label>
-        <input type="text" id = "tipo">
-        <label for="precio">precio:</label>
-        <input type="number" id = "00.00">
-        <button type="button" onclick="crearRegistro()">Crear</button>
-    </form>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+    <script src="crud.js" type="module"></script>
+</head>
 
-    <hr>
-     <script type="module">
-            // Import the functions you need from the SDKs you need
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-            import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
-            // TODO: Add SDKs for Firebase products that you want to use
-            // https://firebase.google.com/docs/web/setup#available-libraries
-          
-            // Your web app's Firebase configuration
+<body>
+    <div class="container">
+        <div class="content">
+            <div class="title">Registro de Productos</div>
+            <form>
+                <!-- Formulario de ingreso de productos -->
+                <div class="product-details">
+                    <div class="input-box">
+                        <span class="details">Nombre del Producto</span>
+                        <input type="text" id="nombreProducto" placeholder="Ingrese el Nombre del Producto" required>
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Tipo de Licor</span>
+                        <input type="text" id="tipoLicor" placeholder="Ingrese el Tipo de Licor" required>
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Precio</span>
+                        <input type="number" id="precio" placeholder="Ingrese el Precio" required>
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Cantidad</span>
+                        <input type="number" id="cantidad" placeholder="Ingrese la Cantidad" required>
+                    </div>
+                    <br>
+                    <div class="Registro1">
+                        <button class="Registro1" type="button" onclick="crearRegistro()">Registrar Producto</button>
+                    </div>
+                    <br>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Opciones al lado -->
+        <div class="options">
+            <div class="option">
+                <button class="Registro1" type="button" onclick="actualizarRegistro()">Actualizar</button>
+            </div>
+            <br>
+        </div>
+        
+        <!-- Visualización de productos -->
+        <br>
+        <div class="title-container">
+            <h1 class="title">Productos Registrados</h1>
+        </div>
+        <div id="mensaje"></div>
+        <table id="tablaProductos">
+            <thead>
+                <tr>
+                    <th>Nombre del Producto</th>
+                    <th>Tipo de Licor</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaBody"></tbody>
+        </table>
+    </div>
 
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-      
-        // Your web app's Firebase configuration
+        import { getDatabase, ref, onValue, remove, push, set } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
+            apiKey: "AIzaSyBtbwtEV54UibTbNI2rLS08xhiR0CquMC0",
             authDomain: "licoreria-c33d4.firebaseapp.com",
+            databaseURL: "https://licoreria-c33d4-default-rtdb.firebaseio.com",
             projectId: "licoreria-c33d4",
             storageBucket: "licoreria-c33d4.appspot.com",
             messagingSenderId: "236261862007",
@@ -47,36 +86,147 @@
             measurementId: "G-BW9GSQNXW6"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+        const tablaBody = document.getElementById('tablaBody');
+        let selectedKey = null;
 
-        // Firebase Database reference
-        const db = getDatabase(app);
+        const productosRef = ref(database, 'Productos');
 
-        const productsRef = ref(db, 'Productos');
+        onValue(productosRef, (snapshot) => {
+            tablaBody.innerHTML = '';
 
-        onValue(productsRef, (snapshot) => {
-            console.log(snapshot.val());
+            snapshot.forEach((productoSnapshot) => {
+                const producto = productoSnapshot.val();
+                const row = `<tr>
+                    <td>${producto.nombreProducto}</td>
+                    <td>${producto.tipoLicor}</td>
+                    <td>${producto.precio}</td>
+                    <td>${producto.cantidad}</td>
+                    <td>
+                        <button class="btn-modificar" onclick="seleccionarProducto('${productoSnapshot.key}')">Editar</button>
+                        <button class="btn-eliminar" onclick="eliminarProducto('${productoSnapshot.key}')">Borrar</button>
+                    </td>
+                </tr>`;
+                tablaBody.innerHTML += row;
+            });
         });
-    </script>
-    window.crearRegistro = function () {
-                const nombre = document.getElementById("nombre").value;
-                const edad = document.getElementById("edad").value;
-                console.log(nombre, descripcion,);
-                
-                push(
-                    ref(database, 'LICORERIA'),
-                    {
-                        name: nombre,
-                        : edad 
-                    }
-                );
 
+        function mostrarMensaje(mensaje, esError = false) {
+            const mensajeDiv = document.getElementById('mensaje');
+            mensajeDiv.textContent = mensaje;
+            mensajeDiv.style.color = esError ? 'red' : 'green';
+        }
+
+        window.crearRegistro = async function () {
+            const nombreProducto = document.getElementById("nombreProducto").value.trim();
+            const tipoLicor = document.getElementById("tipoLicor").value.trim();
+            const precio = document.getElementById("precio").value.trim();
+            const cantidad = document.getElementById("cantidad").value.trim();
+
+            if (nombreProducto === '' || tipoLicor === '' || precio === '' || cantidad === '') {
+                alert('Por favor, complete todos los campos');
+                return;
             }
-          </script>
-</head>
-<body>
-    <h1>BIENVENIDO A MI LICORERIA</h1>
+
+            try {
+                await verificarProductoExistente(nombreProducto);
+                crearNuevoProducto(nombreProducto, tipoLicor, precio, cantidad);
+            } catch (error) {
+                alert('Producto repetido');
+            }
+        }
+
+        function verificarProductoExistente(nombreProducto) {
+            return new Promise((resolve, reject) => {
+                onValue(productosRef, (snapshot) => {
+                    let productoRepetido = false;
+                    snapshot.forEach((productoSnapshot) => {
+                        const producto = productoSnapshot.val();
+                        if (producto.nombreProducto === nombreProducto) {
+                            productoRepetido = true;
+                        }
+                    });
+
+                    if (productoRepetido) {
+                        reject();
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        function crearNuevoProducto(nombreProducto, tipoLicor, precio, cantidad) {
+            push(productosRef, {
+                nombreProducto: nombreProducto,
+                tipoLicor: tipoLicor,
+                precio: precio,
+                cantidad: cantidad
+            });
+
+            alert('Producto registrado exitosamente');
+            limpiarCampos();
+        }
+
+        function limpiarCampos() {
+            document.getElementById('nombreProducto').value = '';
+            document.getElementById('tipoLicor').value = '';
+            document.getElementById('precio').value = '';
+            document.getElementById('cantidad').value = '';
+        }
+
+        window.seleccionarProducto = function (key) {
+            selectedKey = key;
+            const productoRef = ref(database, `Productos/${key}`);
+            onValue(productoRef, (snapshot) => {
+                const producto = snapshot.val();
+                document.getElementById("nombreProducto").value = producto.nombreProducto;
+                document.getElementById("tipoLicor").value = producto.tipoLicor;
+                document.getElementById("precio").value = producto.precio;
+                document.getElementById("cantidad").value = producto.cantidad;
+            });
+        }
+
+        window.actualizarRegistro = function () {
+            if (selectedKey) {
+                const nombreProducto = document.getElementById("nombreProducto").value.trim();
+                const tipoLicor = document.getElementById("tipoLicor").value.trim();
+                const precio = document.getElementById("precio").value.trim();
+                const cantidad = document.getElementById("cantidad").value.trim();
+
+                if (nombreProducto === '' || tipoLicor === '' || precio === '' || cantidad === '') {
+                    alert('Por favor, complete todos los campos');
+                    return;
+                }
+
+                set(ref(database, `Productos/${selectedKey}`), {
+                    nombreProducto: nombreProducto,
+                    tipoLicor: tipoLicor,
+                    precio: precio,
+                    cantidad: cantidad
+                });
+
+                alert('Producto actualizado exitosamente');
+                limpiarCampos();
+                selectedKey = null;
+            } else {
+                alert('Por favor, seleccione un producto para actualizar');
+            }
+        }
+
+        window.eliminarProducto = function (key) {
+            if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+                remove(ref(database, `Productos/${key}`))
+                    .then(() => {
+                        mostrarMensaje('Producto eliminado correctamente', false);
+                    })
+                    .catch((error) => {
+                        mostrarMensaje(`Error al eliminar producto: ${error}`, true);
+                    });
+            }
+        };
+    </script>
 </body>
+
 </html>
