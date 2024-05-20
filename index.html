@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Firebase App</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-analytics.js"></script>
+    <!-- Firebase Database SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js"></script>
+    <!-- Your web app's Firebase configuration -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "licoreria-c33d4.firebaseapp.com",
+            projectId: "licoreria-c33d4",
+            storageBucket: "licoreria-c33d4.appspot.com",
+            messagingSenderId: "236261862007",
+            appId: "1:236261862007:web:78f96318a93f483b92b472",
+            measurementId: "G-BW9GSQNXW6"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+
+        // Firebase Database reference
+        const db = getDatabase(app);
+
+        const productsRef = ref(db, 'Productos');
+
+        onValue(productsRef, (snapshot) => {
+            console.log(snapshot.val());
+        });
+    </script>
+</head>
+<body>
+    <h1>Welcome to my Firebase App</h1>
+</body>
+</html>
